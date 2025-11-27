@@ -3,6 +3,7 @@ package de.seuhd.campuscoffee.acctest;
 import de.seuhd.campuscoffee.api.dtos.PosDto;
 import de.seuhd.campuscoffee.domain.model.CampusType;
 import de.seuhd.campuscoffee.domain.model.PosType;
+import de.seuhd.campuscoffee.domain.ports.PosDataService;
 import de.seuhd.campuscoffee.domain.ports.PosService;
 import io.cucumber.java.*;
 import io.cucumber.java.en.Given;
@@ -91,7 +92,13 @@ public class CucumberPosSteps {
         assertThat(retrievedPosList).isEmpty();
     }
 
-    // TODO: Add Given step for new scenario
+    //  Add Given step for new scenario
+    @Given("three POS")
+    public void threePOS(List<PosDto> List){
+        createdPosList= createPos(List);
+        assertThat(createdPosList).hasSize(3);
+
+    }
 
     // When -----------------------------------------------------------------------
 
@@ -101,7 +108,13 @@ public class CucumberPosSteps {
         assertThat(createdPosList).size().isEqualTo(posList.size());
     }
 
-    // TODO: Add When step for new scenario
+    // Add When step for new scenario
+    @When("I update the description of one POS")
+    public void updatingDesc(String name, String newDesc){
+        PosDto wanted= retrievePosByName(name);
+        PosDto update= new PosDto(wanted.id(), wanted.createdAt(), wanted.updatedAt(), wanted.name(), newDesc, wanted.type(), wanted.campus(),wanted.street(),wanted.houseNumber(),wanted.postalCode(),wanted.city());
+        updatedPos=updatePos(List.of(update)).get(0);
+    }
 
     // Then -----------------------------------------------------------------------
 
@@ -113,5 +126,20 @@ public class CucumberPosSteps {
                 .containsExactlyInAnyOrderElementsOf(createdPosList);
     }
 
-    // TODO: Add Then step for new scenario
+    //  Add Then step for new scenario
+    @Then("the description of the name should be changed and everything else stays the same")
+    public void CheckingIfSuccessfull(String name){
+        List<PosDto> retrievedPosList= retrievePos();
+        assertThat(retrievedPosList)
+        .usingRecursiveComparison()
+        .ignoringFields("description")
+        .isEqualTo(updatedPos);
+            
+        
+        String NewDesc=updatedPos.description();
+        PosDto changed= retrievePosByName(name);
+        assertThat(changed.description())
+        .isEqualTo(NewDesc);
+        
+    }
 }
